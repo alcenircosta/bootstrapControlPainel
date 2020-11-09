@@ -1,8 +1,12 @@
 <?php  
-$pdo = new PDO('mysql:host=localhost;dbname=projeto_bootstrap','root','');
+require_once ('lib/includes.php');
+$pdo = new PDO('mysql:host='.$host.';dbname='.$dbname,$user,$password);
 $sobre = $pdo->prepare("SELECT * FROM `tb_sobre`");
 $sobre->execute();
 $sobre = $sobre->fetch()['sobre'];
+ 
+if(isset($_POST['id_delete'])){deletar($pdo, $_POST['id_delete']);}
+
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +28,7 @@ $sobre = $sobre->fetch()['sobre'];
     <div class="container">
       <a class="navbar-brand" href="#">Painel de controle</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <svg class="bi bi-justify" width="30px" height="30px" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <svg class="bi bi-justify" width="30px" height="30px" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"></svg>
           <path fill-rule="evenodd" d="M4 14.5a.5.5 0 01.5-.5h11a.5.5 0 010 1h-11a.5.5 0 01-.5-.5zm0-3a.5.5 0 01.5-.5h11a.5.5 0 010 1h-11a.5.5 0 01-.5-.5zm0-3a.5.5 0 01.5-.5h11a.5.5 0 010 1h-11a.5.5 0 01-.5-.5zm0-3a.5.5 0 01.5-.5h11a.5.5 0 010 1h-11a.5.5 0 01-.5-.5z" clip-rule="evenodd"></path>
         </button>
         <div class=" navbar-brand collapse navbar-collapse" id="navbarsExampleDefault">
@@ -60,7 +64,7 @@ $sobre = $sobre->fetch()['sobre'];
             <div class="col-md-2">
               <p><svg class="bi bi-clock-fill" width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM5.5 9.5h4v-5a.5.5 0 011 0V10a.5.5 0 01-.5.5H5.5a.5.5 0 010-1z" clip-rule="evenodd"></path>
-              </svg> Último acesso em: 00/00/0000</p>
+              </svg> Último acesso em: 18/04/2019</p>
             </div>
           </div>
         </div>  
@@ -93,27 +97,7 @@ $sobre = $sobre->fetch()['sobre'];
             </div>
             <div id="sobre_section" class="col-md-9">
               <?php  
-              if(isset($_POST['editar_sobre'])){
-                $sobre = $_POST['sobre'];
-                $pdo->exec("DELETE FROM `tb_sobre`");
-                $sql = $pdo->prepare("INSERT INTO `tb_sobre` values (null,?)");
-                $sql->execute(array($sobre));
-                echo '<div class="alert alert-primary" role="alert">
-                O código HTML <b>SOBRE</b> foi editado com sucesso!!!
-                </div>';
-                $sobre = $pdo->prepare("SELECT * FROM `tb_sobre`");
-                $sobre->execute();
-                $sobre = $sobre->fetch()['sobre'];
-              }else if(isset($_POST['cadastrar_equipe'])){
-                $nome = $_POST['nome_membro'];
-                $descricao = $_POST['descricao'];
-                $sql = $pdo->prepare("INSERT INTO `tb_equipe` values (null,?,?)");
-                $sql->execute(array($nome,$descricao));
-                echo '<div class="alert alert-primary" role="alert"><b>Novo membro</b> cadastrado com sucesso!!!</div>';
-                $sobre = $pdo->prepare("SELECT * FROM `tb_sobre`");
-                $sobre->execute();
-                $sobre = $sobre->fetch()['sobre'];
-              }
+                cadastrar_equipe($pdo);
               ?>
               <div  class="card margin_down pd_15" >
                 <div class="card-header cor_padrao">
@@ -161,15 +145,20 @@ $sobre = $sobre->fetch()['sobre'];
                     </thead>
                     <tbody>
                       <?php 
-                      $selecionarMembros = $pdo->prepare("SELECT `id`,`nome` FROM `tb_equipe`");
+                      $selecionarMembros = $pdo->prepare("SELECT * FROM `tb_equipe`");
                       $selecionarMembros->execute();
                       $membros = $selecionarMembros->fetchAll();
                       foreach ($membros as $key => $value) {
                        ?>
                        <tr>
                         <td><?php echo $value['id']; ?></td>
-                        <td><?php echo $value['nome']; ?></td>
-                        <td><button id_membro="<?php echo $value['id']; ?>" type="button" class="btn btn-danger deletar-membro">Excluir</button></td>
+                        <td><?php echo $value['nome_membro']; ?></td>
+                        <td>
+                          <form method="post">
+                            <input type="hidden" name="id_delete" value="<?php echo $value['id']; ?>" />
+                            <input value="Excluir" type="submit" class="btn btn-danger deletar-membro"/>
+                        </form>
+                      </td>
                       </tr>
                     <?php  } ?>
                   </tbody>
